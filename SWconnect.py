@@ -193,7 +193,7 @@ def get_grid(login_instance, grid_name):
             counter = counter + 1
             #print(counter)
             
-    grid_df = pd.DataFrame(xyzcoords,columns=["Y","X",f"{grid.Name()}"])
+    grid_df = pd.DataFrame(xyzcoords,columns=["Y","X","Z"])
 
     return grid_df
 
