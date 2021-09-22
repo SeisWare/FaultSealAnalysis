@@ -1,6 +1,4 @@
 from exceptions import CenterlineError
-import get_centerline
-from trimesh_centerline import medial_axis
 import SeisWare
 
 import SWconnect
@@ -92,7 +90,7 @@ def center_extract(culture_layer):
     x,y = culture_layer.exterior.xy
 
     # Extract centerline of polygon
-    center = geometry_custom.Centerline(culture_layer,interpolation_distance=5)
+    center = geometry_custom.Centerline(culture_layer,interpolation_distance=3)
     
 
     # import trimesh_centerline
@@ -110,16 +108,9 @@ def center_extract(culture_layer):
     
     xylist = set_polygon_object(listxy)
     
-    
-    #print(1)
-    #print(2)
-
-    #print(G_center)
     # Sort list of xy points from centerline
-    # NOTE Need to improve the sorting algorithm to prevent weird points
 
     # Build graph of points
-
 
     G_center = nx.Graph()
 
@@ -137,51 +128,18 @@ def center_extract(culture_layer):
                 current_max_path = dij_path
                 
     print(len(current_max_path))
-    
-    '''
-    for k,v in enumerate(end_nodes):
-        
-        if (k+1 < len(end_nodes) and k - 1 >= 0):
-            
-            dij_path = nx.dijkstra_path(G_center,end_nodes[k],end_nodes[k+1])
-            if len(dij_path) > len(current_max_path):
-                current_max_path = dij_path
-    '''
 
-    #plt.plot(np.array(list(zip(*current_max_path))[0]),np.array(list(zip(*current_max_path))[1]))
-
-    #plt.show()
-
-
-    # Find shortest paths from end nodes
-
-
-    # Take the longest path from end to end node
-
-
-    # Convert list of tuples to np arrays
-    '''
-    x3 = np.array(list(zip(*xylist))[0])
-    y3 = np.array(list(zip(*xylist))[1])
-    '''
-    
     x3 = np.array(list(zip(*current_max_path))[0])
     y3 = np.array(list(zip(*current_max_path))[1])
     #plt.plot(x3,y3,'o')
 
     #plt.show()
-    
-    # Interpolate points to remove spikes
-
-    #xnew = np.linspace(x3.min(),x3.max(),300)
-    
-    #f_linear = interp1d(x3,y3,kind="linear",assume_sorted=False)
 
     return x3,y3
 
-    return xnew,f_linear(xnew)
+    #return xnew,f_linear(xnew)
 
-
+"""
 def associate_new_geofeature(
     primary: pd.DataFrame,
     primary_features: list,
@@ -221,4 +179,80 @@ def associate_new_geofeature(
     result[primary_target] = model.predict(result[primary_features])
     
     return result
+"""
 
+from shapely.geometry.polygon import LinearRing
+
+from shapely.geometry import LineString
+import matplotlib.pyplot as plt
+
+def get_strikes(layer, count):
+
+    # Get the x,y points of each polygon
+    x, y = layer.exterior.xy
+
+    # Convert to a ring for intersections
+    lring = LinearRing(list(layer.exterior.coords))
+    
+    plt.plot(x,y)
+
+    x3, y3 = center_extract(layer)
+
+    plt.plot(x3,y3,'-')
+
+    strikelistx1 = []
+    strikelisty1 = []
+    strikelistx2 = []
+    strikelisty2 = []
+    midlistx = []
+    midlisty = []
+    abdistance = []
+
+
+    # Scroll through elements in x and y lists to calculate perpendicular lines
+    # Perpendicular lines are calculated by connecting parallel offsets to line strings
+    for k,v in enumerate((zip(x3,y3))):
+
+        if (k+1 < len(list(zip(x3,y3))) and k - 1 >= 0):
+            
+            cd_length = 250
+
+            ab = LineString(([(list(zip(x3,y3))[k-1][0],list(zip(x3,y3))[k-1][1]),(v[0],v[1])]))
+
+            left = ab.parallel_offset(cd_length / 2, 'left')
+            right = ab.parallel_offset(cd_length / 2, 'right')
+
+            c = left.boundary[1]
+            d = right.boundary[0]  # note the different orientation for right offset
+            cd = LineString([c, d])
+            
+            cd = cd.intersection(lring)
+
+            #plt.plot([cd[0].x,cd[1].x],[cd[0].y,cd[1].y])
+        
+            if len(abdistance) == 0:
+                abdistance = [ab.length]
+            else:
+                abdistance.append(ab.length+abdistance[k-2])
+
+            try:
+                midlistx.append(v[0])
+                midlisty.append(v[1])
+                strikelistx1.append(cd[0].x)
+                strikelistx2.append(cd[1].x)
+                strikelisty1.append(cd[0].y)
+                strikelisty2.append(cd[1].y)
+            except TypeError:
+                strikelistx1.append(np.NaN)
+                strikelistx2.append(np.NaN)
+                strikelisty1.append(np.NaN)
+                strikelisty2.append(np.NaN)
+            
+
+
+    faultpolydict = {"Object":count,"X1":strikelistx1,"Y1":strikelisty1,"X2":strikelistx2,"Y2":strikelisty2,"MidX":midlistx,"MidY":midlisty,"Length":abdistance}
+        
+    faultDF = pd.DataFrame(faultpolydict)
+
+
+    return faultDF
