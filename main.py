@@ -3,7 +3,6 @@ from networkx.algorithms.bipartite.basic import color
 from scipy.sparse.data import _minmax_mixin
 import get_polygon
 import matplotlib.pyplot as plt
-#import get_centerline
 import SWconnect
 import pandas as pd
 import numpy as np

@@ -1,17 +1,14 @@
+from shapely.geometry.multilinestring import MultiLineString
 from exceptions import CenterlineError
 import SeisWare
-
-import SWconnect
-
 import networkx as nx
-
 from shapely import geometry
-
 import geometry_custom
 import pandas as pd
 import numpy as np
-from scipy.interpolate import interp1d
-from sklearn.neighbors import NearestNeighbors
+import matplotlib.pyplot as plt
+from shapely.geometry.polygon import LinearRing
+from shapely.geometry import LineString
 
 # Collection of functions designed to interact with SeisWare SDK
 
@@ -44,14 +41,7 @@ def get_polyobjects(cult):
         
         # Get all the x,y points from the culture layer
         if val.closed == True:
-            xpoints = []    
-            ypoints = []
-            '''
-            for j in val.points:
-                xpoints.append(j.x.Value(SeisWare.Unit.Meter))
-                ypoints.append(j.y.Value(SeisWare.Unit.Meter))
-            '''   
-        polylist.append(geometry.Polygon([[p.x.Value(SeisWare.Unit.Meter), p.y.Value(SeisWare.Unit.Meter)] for p in val.points]))
+            polylist.append(geometry.Polygon([[p.x.Value(SeisWare.Unit.Meter), p.y.Value(SeisWare.Unit.Meter)] for p in val.points]))
     
     return polylist
 
@@ -81,33 +71,15 @@ def set_polygon(login_instance, name, objects):
     return None
 
 
-
 def center_extract(culture_layer):
 
     # Function to extract the centerline from seisware polygon object and return two lists. Corresponding x,y points for centerline
 
-    # Get x,y coords of surrounding polygon
-    x,y = culture_layer.exterior.xy
-
     # Extract centerline of polygon
     center = geometry_custom.Centerline(culture_layer,interpolation_distance=3)
-    
-
-    # import trimesh_centerline
-
-    # edges, vertices = trimesh_centerline.medial_axis(culture_layer,resolution=2)
-
-    import matplotlib.pyplot as plt
-
-    listxy = [i.xy for i in center]
 
     centerlist = [list(x.coords) for x in list(center)]
-    
-    x2 = []
-    y2 = []
-    
-    xylist = set_polygon_object(listxy)
-    
+
     # Sort list of xy points from centerline
 
     # Build graph of points
@@ -129,62 +101,10 @@ def center_extract(culture_layer):
                 
     print(len(current_max_path))
 
-    x3 = np.array(list(zip(*current_max_path))[0])
-    y3 = np.array(list(zip(*current_max_path))[1])
-    #plt.plot(x3,y3,'o')
+    x_c = np.array(list(zip(*current_max_path))[0])
+    y_c = np.array(list(zip(*current_max_path))[1])
 
-    #plt.show()
-
-    return x3,y3
-
-    #return xnew,f_linear(xnew)
-
-"""
-def associate_new_geofeature(
-    primary: pd.DataFrame,
-    primary_features: list,
-    primary_target: str,
-    aux: pd.DataFrame,
-    aux_features: list,
-    aux_target: str,
-    regressor=None,
-    **kwargs
-):
-    '''Interpolate spatially distributed variable from one dataset in another dataset.
-    Args:
-        primary: pandas.DataFrame - Dataset that needs interpolated variable.
-        primary_features: list    - List of strings that represent latitude and longitude.
-        primary_target: str       - Name of new variable that will be created/overwritten.
-        aux: pandas.DataFrame     - (Auxillary) Dataset that has spatially distributed variable.
-        aux_features: list        - List of strings that represent latitude and longitude,
-                                    same order as argument `primary_features`.
-        aux_target: str           - Name of the variable that will be used for interpolation.
-        regressor: class          - Class that will be used for spatial regression.
-                                    Must have `fit()` and `predict()` methods.
-        **kwargs                  - Arguments that will be supplied to `regressor`.
-    Retruns:
-        pandas.DataFrame - Copy of arg `primary`, with new column of interpolated variable.
-
-        From Connor Johnson Software Underground - Apr 7, 2021 1:16PM
-    '''
-    result = primary.copy()
-    if regressor is None:
-        #model = KNeighborsRegressor(n_neighbors=5, weights='distance')
-        model = NearestNeighbors(n_neighbors=5)
-    else:
-        model = regressor(**kwargs)
-    aX = aux[aux_features]
-    ay = aux[aux_target]
-    model.fit(aX, ay)
-    result[primary_target] = model.predict(result[primary_features])
-    
-    return result
-"""
-
-from shapely.geometry.polygon import LinearRing
-
-from shapely.geometry import LineString
-import matplotlib.pyplot as plt
+    return x_c,y_c
 
 def get_strikes(layer, count):
 
@@ -199,7 +119,7 @@ def get_strikes(layer, count):
     x3, y3 = center_extract(layer)
 
     plt.plot(x3,y3,'-')
-
+    
     strikelistx1 = []
     strikelisty1 = []
     strikelistx2 = []
@@ -207,8 +127,8 @@ def get_strikes(layer, count):
     midlistx = []
     midlisty = []
     abdistance = []
-
-
+    
+   
     # Scroll through elements in x and y lists to calculate perpendicular lines
     # Perpendicular lines are calculated by connecting parallel offsets to line strings
     for k,v in enumerate((zip(x3,y3))):
@@ -224,12 +144,20 @@ def get_strikes(layer, count):
 
             c = left.boundary[1]
             d = right.boundary[0]  # note the different orientation for right offset
+
             cd = LineString([c, d])
             
             cd = cd.intersection(lring)
-
-            #plt.plot([cd[0].x,cd[1].x],[cd[0].y,cd[1].y])
-        
+            '''
+            # NOTE this is for plotting to QC values
+            if ab.xy[1][0] < ab.xy[1][1]: # check if the line is going up or down
+                plt.plot(cd[0].x,cd[0].y, 'o')
+                plt.plot(cd[1].x,cd[1].y, 'x')
+            elif ab.xy[1][0] > ab.xy[1][1]:
+                plt.plot(cd[1].x,cd[1].y, 'o')
+                plt.plot(cd[0].x,cd[0].y, 'x')
+            '''
+            
             if len(abdistance) == 0:
                 abdistance = [ab.length]
             else:
@@ -238,20 +166,25 @@ def get_strikes(layer, count):
             try:
                 midlistx.append(v[0])
                 midlisty.append(v[1])
-                strikelistx1.append(cd[0].x)
-                strikelistx2.append(cd[1].x)
-                strikelisty1.append(cd[0].y)
-                strikelisty2.append(cd[1].y)
+                if ab.xy[1][0] < ab.xy[1][1]:
+                    strikelistx1.append(cd[0].x)
+                    strikelistx2.append(cd[1].x)
+                    strikelisty1.append(cd[0].y)
+                    strikelisty2.append(cd[1].y)
+                elif ab.xy[1][0] > ab.xy[1][1]: # when the line is going down, change the direction of the strike intersection points
+                    strikelistx1.append(cd[1].x)
+                    strikelistx2.append(cd[0].x)
+                    strikelisty1.append(cd[1].y)
+                    strikelisty2.append(cd[0].y)
             except TypeError:
                 strikelistx1.append(np.NaN)
                 strikelistx2.append(np.NaN)
                 strikelisty1.append(np.NaN)
                 strikelisty2.append(np.NaN)
-            
-
-
+    
     faultpolydict = {"Object":count,"X1":strikelistx1,"Y1":strikelisty1,"X2":strikelistx2,"Y2":strikelisty2,"MidX":midlistx,"MidY":midlisty,"Length":abdistance}
-        
+    #faultpolydict = {"Object":count,"X1":strikelistx1,"Y1":strikelisty1,"X2":strikelistx2,"Y2":strikelisty2,"Length":abdistance}
+            
     faultDF = pd.DataFrame(faultpolydict)
 
 
