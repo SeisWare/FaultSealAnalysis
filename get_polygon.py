@@ -166,16 +166,16 @@ def get_strikes(layer, count):
             try:
                 midlistx.append(v[0])
                 midlisty.append(v[1])
-                if ab.xy[1][0] < ab.xy[1][1]:
-                    strikelistx1.append(cd[0].x)
-                    strikelistx2.append(cd[1].x)
-                    strikelisty1.append(cd[0].y)
-                    strikelisty2.append(cd[1].y)
-                elif ab.xy[1][0] > ab.xy[1][1]: # when the line is going down, change the direction of the strike intersection points
-                    strikelistx1.append(cd[1].x)
-                    strikelistx2.append(cd[0].x)
-                    strikelisty1.append(cd[1].y)
-                    strikelisty2.append(cd[0].y)
+                #if ab.xy[1][0] < ab.xy[1][1]:
+                strikelistx1.append(cd[0].x)
+                strikelistx2.append(cd[1].x)
+                strikelisty1.append(cd[0].y)
+                strikelisty2.append(cd[1].y)
+                #elif ab.xy[1][0] > ab.xy[1][1]: # when the line is going down, change the direction of the strike intersection points
+                #    strikelistx1.append(cd[1].x)
+                 #   strikelistx2.append(cd[0].x)
+                #    strikelisty1.append(cd[1].y)
+                 #   strikelisty2.append(cd[0].y)
             except TypeError:
                 strikelistx1.append(np.NaN)
                 strikelistx2.append(np.NaN)

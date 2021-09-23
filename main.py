@@ -9,7 +9,7 @@ import numpy as np
 
 proj = SWconnect.sw_connect("CanacolFaults")
 
-cult = get_polygon.getLayer(proj,"Icotea Top CDO Faults_poly - Copy2")
+cult = get_polygon.getLayer(proj,"Icotea Top CDO Faults_poly - Copy")
 
 grid = SWconnect.get_grid(proj,"icotea_resample Grid")
 
@@ -45,9 +45,9 @@ from scipy.interpolate import griddata
 
 
 
-faultDF["Z1"] = griddata((grid.X,grid.Y),grid.Z,(faultDF.X1,faultDF.Y1),method="nearest")
+faultDF["Z1"] = griddata((grid.X,grid.Y),grid.Z,(faultDF.X1,faultDF.Y1),method="linear")
 
-faultDF["Z2"] = griddata((grid.X,grid.Y),grid.Z,(faultDF.X2,faultDF.Y2),method="nearest")
+faultDF["Z2"] = griddata((grid.X,grid.Y),grid.Z,(faultDF.X2,faultDF.Y2),method="linear")
 
 faultDF["Zdiff"] = faultDF.Z1-faultDF.Z2
 
