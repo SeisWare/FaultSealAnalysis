@@ -114,11 +114,11 @@ def get_strikes(layer, count):
     # Convert to a ring for intersections
     lring = LinearRing(list(layer.exterior.coords))
     
-    plt.plot(x,y)
+    #plt.plot(x,y)
 
     x3, y3 = center_extract(layer)
 
-    plt.plot(x3,y3,'-')
+    #plt.plot(x3,y3,'-')
     
     strikelistx1 = []
     strikelisty1 = []
@@ -128,14 +128,13 @@ def get_strikes(layer, count):
     midlisty = []
     abdistance = []
     
-   
     # Scroll through elements in x and y lists to calculate perpendicular lines
     # Perpendicular lines are calculated by connecting parallel offsets to line strings
     for k,v in enumerate((zip(x3,y3))):
 
         if (k+1 < len(list(zip(x3,y3))) and k - 1 >= 0):
             
-            cd_length = 250
+            cd_length = 550
 
             ab = LineString(([(list(zip(x3,y3))[k-1][0],list(zip(x3,y3))[k-1][1]),(v[0],v[1])]))
 
@@ -166,16 +165,16 @@ def get_strikes(layer, count):
             try:
                 midlistx.append(v[0])
                 midlisty.append(v[1])
-                #if ab.xy[1][0] < ab.xy[1][1]:
-                strikelistx1.append(cd[0].x)
-                strikelistx2.append(cd[1].x)
-                strikelisty1.append(cd[0].y)
-                strikelisty2.append(cd[1].y)
-                #elif ab.xy[1][0] > ab.xy[1][1]: # when the line is going down, change the direction of the strike intersection points
-                #    strikelistx1.append(cd[1].x)
-                 #   strikelistx2.append(cd[0].x)
-                #    strikelisty1.append(cd[1].y)
-                 #   strikelisty2.append(cd[0].y)
+                if ab.xy[1][0] < ab.xy[1][1]:
+                    strikelistx1.append(cd[0].x)
+                    strikelistx2.append(cd[1].x)
+                    strikelisty1.append(cd[0].y)
+                    strikelisty2.append(cd[1].y)
+                elif ab.xy[1][0] > ab.xy[1][1]: # when the line is going down, change the direction of the strike intersection points
+                    strikelistx1.append(cd[1].x)
+                    strikelistx2.append(cd[0].x)
+                    strikelisty1.append(cd[1].y)
+                    strikelisty2.append(cd[0].y)
             except TypeError:
                 strikelistx1.append(np.NaN)
                 strikelistx2.append(np.NaN)
@@ -183,9 +182,7 @@ def get_strikes(layer, count):
                 strikelisty2.append(np.NaN)
     
     faultpolydict = {"Object":count,"X1":strikelistx1,"Y1":strikelisty1,"X2":strikelistx2,"Y2":strikelisty2,"MidX":midlistx,"MidY":midlisty,"Length":abdistance}
-    #faultpolydict = {"Object":count,"X1":strikelistx1,"Y1":strikelisty1,"X2":strikelistx2,"Y2":strikelisty2,"Length":abdistance}
-            
+          
     faultDF = pd.DataFrame(faultpolydict)
-
 
     return faultDF
