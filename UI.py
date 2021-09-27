@@ -1,84 +1,90 @@
 
 from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import uic
 from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QFileDialog
+import sys
 
 import SWconnect
 import SeisWare
+from fault_throw import fault_throw_viz
 
-class MainWindow(QMainWindow):
 
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args,**kwargs)
-        
-        self.widget = QWidget(self)
-        self.label = QLabel('Note: Length and Area measurements are estimates due to the Map Projection')
-        self.setCentralWidget(self.widget)
-        
-        layout = QHBoxLayout(self.widget)
-        
-    
-        layout.addItem(QSpacerItem(139, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-        vlay = QVBoxLayout()
-        vlay.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
-        layout.addLayout(vlay)
-        layout.addItem(QSpacerItem(139, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-        
+def projectlist():
 
-        self.cb = QComboBox(self.widget)
-        self.cb.addItems(projectlist()[1])
-        self.cb.currentIndexChanged.connect(self.selectionchange)
-        
-        self.cb2 = QComboBox(self.widget)
-        self.cb2.addItems(cultureDF(projectlist()[0]))
+    projlist = []
+    for i in SWconnect.sw_project_list():
+        projlist.append(i.Name())
+    projlist = sorted(projlist)
+    proj = SWconnect.sw_connect(projlist[0])
 
-        self.b1 = QPushButton("Output  File",self.widget)
-        self.b1.clicked.connect(self.on_click)
-        
-        
-        vlay.addWidget(QLabel("Project Name"))
-        vlay.addWidget(self.cb)
-        vlay.addWidget(QLabel("Layer Name"))
-        vlay.addWidget(self.cb2)
-        vlay.addWidget(self.b1)
-        vlay.addWidget(self.label)
-        vlay.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
-        
-        self.setWindowTitle("Culture Statistics")
-        
+    return [proj, projlist]
 
-	
+def gridlist(proj):
 
-    def selectionchange(self,i):
+    grid_list = SeisWare.GridList()
 
-        proj = SWconnect.sw_connect(self.cb.currentText()) #get the proj based on selection
-            
-        self.cb2.clear()
-        self.cb2.addItems(cultureDF(proj))
+    proj.GridManager().GetAll(grid_list)
+
+    grid_list = [i.Name() for i in grid_list]
+
+    return grid_list
+
+def polylist(proj):
+
+    poly_list = SeisWare.CultureList()
+
+    proj.CultureManager().GetAll(poly_list)
+
+    poly_list = [i.Name() for i in poly_list]
+
+    return poly_list
+
+class ui(QDialog):
+
+    def __init__(self):
+        super(ui, self).__init__()
+        uic.loadUi("dialog.ui",self)
+        self.show()
+        self.projectName.addItems(['Select a project']+(projectlist()[1]))
         
+        self.projectName.currentIndexChanged.connect(self.selectionchange)
+
+        self.outputFile.clicked.connect(self.on_click)
+
+        self.browseFile.clicked.connect(self.browseClick)
+
+        self.setWindowTitle("Fault Throw Imager")
+        self.setWindowIcon(QtGui.QIcon('SeisWareLogo.png'))
+ 
+    def selectionchange(self):
+
+        proj = SWconnect.sw_connect(self.projectName.currentText()) #get the proj based on selection
+        self.gridName.clear()
+        self.polygonName.clear()
+        
+        self.gridName.addItems(sorted(gridlist(proj)))
+        
+        self.polygonName.addItems(sorted(polylist(proj)))
+
     def on_click(self):
 
-        proj = SWconnect.sw_connect(self.cb.currentText())
-        culturestats = {}
-        culturelist = []    
-        for i in getAllLayers(proj):
-            
-            cult = getLayer(proj,i.Name())
-            culturestats[i.Name()] = areaList(cult) #Create the dictionary based on {Name:{"Count":value,"Area":[Values]}}
-            culturelist.append(i.Name()) #Create the list
+        proj = SWconnect.sw_connect(self.projectName.currentText())
+        grid = self.gridName.currentText()
+        cult = self.polygonName.currentText()
+        fault_throw_viz(proj,cult,grid,self.folderLocation.text())
 
-            
-        contourDF = pd.DataFrame(culturestats[self.cb2.currentText()])
-        contourDF.index = contourDF.index + 1
-        current_time = date.today().strftime('%d%m%Y')
-        contourDF.to_csv(f"C:\\temp\\{self.cb2.currentText()} stats {current_time}.csv")
-        print(r"File output to C:\temp")
+        print(f"File output to {self.folderLocation.text()}")
         #define what happens on button click
-        
 
+
+    def browseClick(self):
+        filename = QFileDialog.getExistingDirectory(self, "Select Folder")
+        
+        if filename:
+            self.folderLocation.setText(filename)
 
 app = QApplication(sys.argv)
-
-window = MainWindow()
-window.show()
-
+window = ui()
 app.exec_()
