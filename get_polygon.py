@@ -1,13 +1,12 @@
-from shapely.geometry.multilinestring import MultiLineString
-from exceptions import CenterlineError
+
 import SeisWare
 import networkx as nx
-from shapely import geometry
 import geometry_custom
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry.polygon import LinearRing
+from shapely import geometry
 from shapely.geometry import LineString
 
 # Collection of functions designed to interact with SeisWare SDK

@@ -73,6 +73,7 @@ class ui(QDialog):
         proj = SWconnect.sw_connect(self.projectName.currentText())
         grid = self.gridName.currentText()
         cult = self.polygonName.currentText()
+        
         fault_throw_viz(proj,cult,grid,self.folderLocation.text())
 
         print(f"File output to {self.folderLocation.text()}")

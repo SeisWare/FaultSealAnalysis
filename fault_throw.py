@@ -1,19 +1,8 @@
-
-from networkx.algorithms.bipartite.basic import color
-from scipy.sparse.data import _minmax_mixin
 import get_polygon
-import matplotlib.pyplot as plt
 import SWconnect
 import pandas as pd
 import numpy as np
 from scipy.interpolate import griddata
-
-#proj = SWconnect.sw_connect("CanacolFaults")
-
-#cult = get_polygon.getLayer(proj,"Icotea Top CDO Faults_poly - Copy")
-
-#grid = SWconnect.get_grid(proj,"Icotea TopCDO Depth-July2021 Grid")
-
 
 def fault_throw_viz(proj,cult_name,grid_name,folder_name):
     # Replace null grid values with NaN
