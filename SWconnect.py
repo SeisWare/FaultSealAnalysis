@@ -66,11 +66,18 @@ def sw_connect(project_name):
         sys.exit(1)
         
     login_instance = SeisWare.LoginInstance()
-    try:
-        login_instance.Open(connection, projects[0])
-    except RuntimeError as err:
-        handle_error("Failed to connect to the project", err)
-        
+    
+    attempts = 0
+
+    while attempts < 3:
+        try:
+            login_instance.Open(connection, projects[0])
+            break
+        except RuntimeError as err:
+            attempts += 1
+            handle_error("Failed to connect to the project", err)
+            
+            
     return login_instance
 
 def get_well(login_instance,uwi):

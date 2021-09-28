@@ -212,13 +212,35 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     #ax1.xlabel("Distance Along Fault (m)")
     #ax1.ylabel("Grid Difference (m)")
     ax1.plot(zc_DF.Length,zc_DF['Zdiffsmooth'],'x')
+    try:    
+        ax1.text(ZplotDF.Length.iloc[0],ZplotDF['Zdiffsmooth'].iloc[0],"A")
+
+        ax1.text(ZplotDF.Length.iloc[-1],ZplotDF['Zdiffsmooth'].iloc[-1],"B")
+    except IndexError:
+        None
     ax1.axhline(y=0,color='r')
 
-    ax2.plot(plotDF.X1,plotDF.Y1)
-    ax2.plot(plotDF.X2,plotDF.Y2)
-    ax2.plot(plotDF.MidX,plotDF.MidY)
+    ax2.plot(plotDF.X1,plotDF.Y1,color = "r")
+    ax2.plot(plotDF.X2,plotDF.Y2,color = "r")
+    
+
+    try:
+        ax2.plot(plotDF.MidX,plotDF.MidY)
+    except AttributeError:
+        None
+    
     zc_DF= zc_DF[zc_DF['Zdiffsmooth'].notna()]
-    ax2.plot(zc_DF.MidX,zc_DF.MidY,'x')
+    try:
+        ax2.plot(plotDF.MidX,plotDF.MidY)
+
+        ax2.text(plotDF.MidX.iloc[0],plotDF.MidY.iloc[0],"A")
+        ax2.text(plotDF.MidX.iloc[-1],plotDF.MidY.iloc[-1],"B")
+
+        ax2.plot(zc_DF.MidX,zc_DF.MidY,'x')
+    except AttributeError:
+        None
+    
+    
     ax2.set_aspect('equal',adjustable='box')
     
     if not os.path.isdir(f"{folder_path}/Images/"):
@@ -228,4 +250,6 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     fig.savefig(f"{folder_path}/Images/Fault{plot_number}.png")
     zc_DF.to_csv(f"{folder_path}/CSV Files/zc_DF{plot_number}.csv")
 
-    plt.show()
+    #plt.show()
+
+

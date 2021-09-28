@@ -3,6 +3,7 @@ import SWconnect
 import pandas as pd
 import numpy as np
 from scipy.interpolate import griddata
+import matplotlib.pyplot as plt
 
 def fault_throw_viz(proj,cult_name,grid_name,folder_name):
     # Replace null grid values with NaN
@@ -51,10 +52,22 @@ def fault_throw_viz(proj,cult_name,grid_name,folder_name):
 
     faultDF["Zdiff"] = faultDF.Z1-faultDF.Z2
 
+    fig,ax = plt.subplots(figsize=(5,5))
+    
+
+
     for i in faultDF.Object.unique():
         plotDF = faultDF.loc[faultDF['Object'] == i]
 
         get_polygon.build_plots(plotDF,bin_size,i,folder_name)
+
+        ax.plot(plotDF.X1,plotDF.Y1,color = (1-i / len(faultDF.Object.unique()), i / len(faultDF.Object.unique()), 0, 1))
+    
+        ax.plot(plotDF.X2,plotDF.Y2,color = (1-i / len(faultDF.Object.unique()), i / len(faultDF.Object.unique()), 0, 1))
+
+        ax.text(plotDF.X1.median(),plotDF.Y1.median(),f"#{i}")
+
+    fig.savefig(f"{folder_name}/Map.png")
 
     faultDF.reset_index().to_csv(f"{folder_name}/result.csv")
 
