@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from shapely.geometry.polygon import LinearRing
 from shapely import geometry
 from shapely.geometry import LineString
+import os
 
 # Collection of functions designed to interact with SeisWare SDK
 
@@ -220,7 +221,11 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     ax2.plot(zc_DF.MidX,zc_DF.MidY,'x')
     ax2.set_aspect('equal',adjustable='box')
     
-    fig.savefig(f"{folder_path}\\Images\\Fault{plot_number}.png")
-    zc_DF.to_csv(f"{folder_path}\\CSV Files\\zc_DF{plot_number}.csv")
+    if not os.path.isdir(f"{folder_path}/Images/"):
+        os.makedirs(f"{folder_path}/Images/")
+        os.makedirs(f"{folder_path}/CSV Files/")
+    
+    fig.savefig(f"{folder_path}/Images/Fault{plot_number}.png")
+    zc_DF.to_csv(f"{folder_path}/CSV Files/zc_DF{plot_number}.csv")
 
     plt.show()

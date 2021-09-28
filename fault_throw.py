@@ -56,5 +56,5 @@ def fault_throw_viz(proj,cult_name,grid_name,folder_name):
 
         get_polygon.build_plots(plotDF,bin_size,i,folder_name)
 
-    faultDF.reset_index().to_csv(f"{folder_name}\\result.csv")
+    faultDF.reset_index().to_csv(f"{folder_name}/result.csv")
 
