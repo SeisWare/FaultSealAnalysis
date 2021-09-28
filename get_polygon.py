@@ -213,7 +213,7 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     #ax1.ylabel("Grid Difference (m)")
     ax1.plot(zc_DF.Length,zc_DF['Zdiffsmooth'],'x')
     try:    
-        ax1.text(ZplotDF.Length.iloc[10],0,"A")
+        ax1.text(ZplotDF.Length.iloc[2],0,"A")
 
         ax1.text(ZplotDF.Length.iloc[-1],0,"B")
     except IndexError:
