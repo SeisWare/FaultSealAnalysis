@@ -12,6 +12,8 @@ import os
 
 # Collection of functions designed to interact with SeisWare SDK
 
+pd.set_option('mode.chained_assignment', None)
+
 def getLayer(login_instance,name):
     #Here we get a single culture layer based on a login instance and a given layer name
     #We will also populate the layer because why not
@@ -191,13 +193,16 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     # Drop values if the distance is greater than the bin size
     ZplotDF = plotDF.drop(plotDF[(plotDF["Interp_distance1"] > bin_size) | (plotDF["Interp_distance2"] > bin_size)].index)
 
-    ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')].rolling(13).mean()
+    a_label = f"A{plot_number}"
+    b_label = f"B{plot_number}"
+
+    ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')].rolling(25).mean()
+    #ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')]
 
     zero_crossings = np.where(np.diff(np.sign(ZplotDF['Zdiffsmooth'])))[0]
     #zero_crossings = np.where(np.logical_and(plotDF['Zdiffsmooth']>=-0.2, plotDF['Zdiffsmooth']<=0.2))[0]
     
     if len(zero_crossings) > 0:
-        #zero_crossings = [x + 7 for x in zero_crossings]
 
         zc_DF = ZplotDF.iloc[zero_crossings]
         
@@ -205,38 +210,61 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     else:
         zc_DF = pd.DataFrame(columns = ["Length","Zdiffsmooth"])
 
+    
+    zc_DF = zc_DF[zc_DF['Zdiffsmooth'].notna()]
 
-    fig, (ax1,ax2) = plt.subplots(1,2)
+    cross_point_list = []
+    for i, txt in enumerate(zc_DF.Length.items()):
+        cross_point_list.append(i+1)
+
+    zc_DF["Cross point"] = cross_point_list
+
+    fig, (ax1,ax2) = plt.subplots(1,2,figsize=(10,10))
     ax1.plot(ZplotDF.Length,ZplotDF['Zdiffsmooth'])
     fig.suptitle(f"Fault #{plot_number}")
-    #ax1.xlabel("Distance Along Fault (m)")
-    #ax1.ylabel("Grid Difference (m)")
+    ax1.set_xlabel("Distance Along Fault (m)")
+    ax1.set_ylabel("Fault Difference (m)")
     ax1.plot(zc_DF.Length,zc_DF['Zdiffsmooth'],'x')
+    
+    ax1.ticklabel_format(axis='both',style='plain',useOffset=False)
+    
+    for i in cross_point_list:
+        ax1.annotate(i, (zc_DF.Length.iloc[i-1], zc_DF['Zdiffsmooth'].iloc[i-1]))
+    
     try:    
-        ax1.text(ZplotDF.Length.iloc[2],0,"A")
+        ax1.text(ZplotDF.Length.iloc[2],0,a_label)
 
-        ax1.text(ZplotDF.Length.iloc[-1],0,"B")
+        ax1.text(ZplotDF.Length.iloc[-1],0,b_label)
     except IndexError:
         None
+    
     ax1.axhline(y=0,color='r')
+
+    # Change x axis to make more intuitive sense by flipping if necessary
+    if ZplotDF.MidX.iloc[2] > ZplotDF.MidX.iloc[-1]:
+        print(f"plot # {plot_number} flipped")
+        ax1.invert_xaxis()
+
 
     ax2.plot(plotDF.X1,plotDF.Y1,color = "r")
     ax2.plot(plotDF.X2,plotDF.Y2,color = "r")
-    
-
+    ax2.ticklabel_format(axis='both',style='plain',useOffset=False)
     try:
         ax2.plot(plotDF.MidX,plotDF.MidY)
     except AttributeError:
         None
     
-    zc_DF= zc_DF[zc_DF['Zdiffsmooth'].notna()]
+    
     try:
         ax2.plot(plotDF.MidX,plotDF.MidY)
-
-        ax2.text(plotDF.MidX.iloc[0],plotDF.MidY.iloc[0],"A")
-        ax2.text(plotDF.MidX.iloc[-1],plotDF.MidY.iloc[-1],"B")
+        ax2.text(plotDF.MidX.iloc[0],plotDF.MidY.iloc[0],a_label)
+        ax2.text(plotDF.MidX.iloc[-1],plotDF.MidY.iloc[-1],b_label)
 
         ax2.plot(zc_DF.MidX,zc_DF.MidY,'x')
+        
+        for i in cross_point_list:
+            ax2.annotate(i, (zc_DF.MidX.iloc[i-1], zc_DF.MidY.iloc[i-1]))
+    
     except AttributeError:
         None
     
@@ -247,7 +275,14 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
         os.makedirs(f"{folder_path}/Images/")
         os.makedirs(f"{folder_path}/CSV Files/")
     
-    fig.savefig(f"{folder_path}/Images/Fault{plot_number}.png")
+    plotDF.dropna()
+    plotDF["Cross point"] = np.NaN
+    plotDF.loc[0,'Cross point'] = a_label
+    plotDF.iloc[-1,plotDF.columns.get_loc('Cross point')] = b_label
+    print(plotDF.iloc[[0,-1]])
+    zc_DF = pd.concat([zc_DF,plotDF],axis=0,ignore_index=True)
+    zc_DF.dropna(subset=['Cross point'],inplace=True)
+    fig.savefig(f"{folder_path}/Images/Fault{plot_number}.png",dpi = 200)
     zc_DF.to_csv(f"{folder_path}/CSV Files/zc_DF{plot_number}.csv")
 
     #plt.show()
