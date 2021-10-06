@@ -56,7 +56,7 @@ class ui(QDialog):
         self.browseFile.clicked.connect(self.browseClick)
 
         self.setWindowTitle("Fault Throw Imager")
-        self.setWindowIcon(QtGui.QIcon('SeisWareLogo.png'))
+        self.setWindowIcon(QtGui.QIcon('Connect.png'))
  
     def selectionchange(self):
 
