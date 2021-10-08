@@ -1,6 +1,10 @@
+.gitignore
+
 __pycache__/
 Include/
 Lib/
 Scripts/
 
 result.csv
+faultthrowviz.code-workspace
+pyvenv.cfg
