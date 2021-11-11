@@ -108,7 +108,7 @@ def center_extract(culture_layer):
 
     return x_c,y_c
 
-def get_strikes(layer, count):
+def get_strikes(layer, count, sample_interval = 1):
 
     # Get the x,y points of each polygon
     x, y = layer.exterior.xy
@@ -149,6 +149,7 @@ def get_strikes(layer, count):
             cd = LineString([c, d])
             
             cd = cd.intersection(lring)
+            
             '''
             # NOTE this is for plotting to QC values
             if ab.xy[1][0] < ab.xy[1][1]: # check if the line is going up or down
@@ -196,7 +197,7 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     a_label = f"A{plot_number}"
     b_label = f"B{plot_number}"
 
-    ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')].rolling(25).mean()
+    ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')].rolling(15).mean()
     #ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')]
 
     zero_crossings = np.where(np.diff(np.sign(ZplotDF['Zdiffsmooth'])))[0]
@@ -246,7 +247,7 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
         ax1.invert_xaxis()
 
 
-    ax2.plot(plotDF.X1,plotDF.Y1,color = "r")
+    ax2.plot(plotDF.X1,plotDF.Y1,color = "g")
     ax2.plot(plotDF.X2,plotDF.Y2,color = "r")
     ax2.ticklabel_format(axis='both',style='plain',useOffset=False)
     try:
