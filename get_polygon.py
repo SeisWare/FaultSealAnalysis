@@ -16,6 +16,24 @@ from itertools import combinations
 
 pd.set_option('mode.chained_assignment', None)
 
+def resample_center(faultDF, sample_interval):
+
+    max_length = faultDF['Length'].max()
+    start_length = faultDF['Length'].min()
+
+    print(start_length,max_length)
+
+    faultDF['Length'] = pd.to_datetime(faultDF['Length'],unit='s')
+
+    faultDF = faultDF.resample(f'{sample_interval}s',on='Length').mean()
+
+    faultDF.reset_index(inplace =True)
+
+    faultDF['Length'] = faultDF['Length'].apply(lambda x: x.value/10**9)
+
+    return faultDF.reset_index()
+
+
 def getLayer(login_instance,name):
     
     #Here we get a single culture layer based on a login instance and a given layer name
