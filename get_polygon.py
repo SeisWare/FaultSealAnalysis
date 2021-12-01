@@ -16,10 +16,6 @@ from itertools import combinations
 
 pd.set_option('mode.chained_assignment', None)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 7b6e6069777852ad888cbe548fe82146087f4102
 def getLayer(login_instance,name):
     
     #Here we get a single culture layer based on a login instance and a given layer name
@@ -195,20 +191,11 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     a_label = f"A{plot_number}"
     b_label = f"B{plot_number}"
 
-<<<<<<< HEAD
     ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')].rolling(smoothing_window).mean()
     #ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')]
 
     zero_crossings = np.where(np.diff(np.sign(ZplotDF['Zdiffsmooth'])))[0]
 
-=======
-    ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')].rolling(25).mean()
-    #ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')]
-
-    zero_crossings = np.where(np.diff(np.sign(ZplotDF['Zdiffsmooth'])))[0]
-    #zero_crossings = np.where(np.logical_and(plotDF['Zdiffsmooth']>=-0.2, plotDF['Zdiffsmooth']<=0.2))[0]
-    
->>>>>>> 7b6e6069777852ad888cbe548fe82146087f4102
     if len(zero_crossings) > 0:
 
         zc_DF = ZplotDF.iloc[zero_crossings]
@@ -227,7 +214,6 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     zc_DF["Cross point"] = cross_point_list
 
     fig, (ax1,ax2) = plt.subplots(1,2,figsize=(10,10))
-<<<<<<< HEAD
     
     
     ax2.plot(plotDF.X1,plotDF.Y1,color = "g")
@@ -260,8 +246,6 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     
     ax2.plot()
 
-=======
->>>>>>> 7b6e6069777852ad888cbe548fe82146087f4102
     ax1.plot(ZplotDF.Length,ZplotDF['Zdiffsmooth'])
     fig.suptitle(f"Fault #{plot_number}")
     ax1.set_xlabel("Distance Along Fault (m)")
