@@ -9,13 +9,19 @@ from shapely.geometry.polygon import LinearRing
 from shapely import geometry
 from shapely.geometry import LineString
 import os
+from itertools import combinations
+
 
 # Collection of functions designed to interact with SeisWare SDK
 
 pd.set_option('mode.chained_assignment', None)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 7b6e6069777852ad888cbe548fe82146087f4102
 def getLayer(login_instance,name):
+    
     #Here we get a single culture layer based on a login instance and a given layer name
     #We will also populate the layer because why not
     culture_list = SeisWare.CultureList()
@@ -37,8 +43,10 @@ def getLayer(login_instance,name):
     return polyObjects
 
 def get_polyobjects(cult):
+    
     #Return a list of all areas in a layer, uses a populated layer as input such as from getLayer function
     polylist = []
+    
     #Go through objects in layer
     for val in cult:
         
@@ -57,7 +65,6 @@ def set_polygon_object(points, closed = True):
     xylist = []
 
     for i in points:
-        #print(i[0][0],i[1])
         wp2 = SeisWare.WorldPos2(SeisWare.Measurement(i[0][0],SeisWare.Unit.Meter),SeisWare.Measurement(i[1][0],SeisWare.Unit.Meter))
         polygon_points.append(wp2)
         xylist.append((i[0][0],i[1][0]))
@@ -65,8 +72,6 @@ def set_polygon_object(points, closed = True):
 
     polyobjectlist = SeisWare.PolygonObjectList()
     
-    #login_instance.CultureManager().SetPolygonObjects(polyobjectlist)
-
     return xylist
 
 def set_polygon(login_instance, name, objects):
@@ -79,7 +84,7 @@ def center_extract(culture_layer):
     # Function to extract the centerline from seisware polygon object and return two lists. Corresponding x,y points for centerline
 
     # Extract centerline of polygon
-    center = geometry_custom.Centerline(culture_layer,interpolation_distance=3)
+    center = geometry_custom.Centerline(culture_layer,interpolation_distance=50)
 
     centerlist = [list(x.coords) for x in list(center)]
 
@@ -95,8 +100,6 @@ def center_extract(culture_layer):
 
     current_max_path = []
     
-    from itertools import combinations
-
     for combo in combinations(end_nodes,2):
         dij_path = nx.dijkstra_path(G_center,combo[0],combo[1])
         if len(dij_path) > len(current_max_path):
@@ -109,23 +112,6 @@ def center_extract(culture_layer):
 
     return x_c,y_c
 
-def resample_center(faultDF, sample_interval):
-
-    max_length = faultDF['Length'].max()
-    start_length = faultDF['Length'].min()
-
-    print(start_length,max_length)
-
-    faultDF['Length'] = pd.to_datetime(faultDF['Length'],unit='s')
-
-    faultDF = faultDF.resample(f'{sample_interval}s',on='Length').mean()
-
-    faultDF.reset_index(inplace =True)
-
-    faultDF['Length'] = faultDF['Length'].apply(lambda x: x.value/10**9)
-
-    return faultDF.reset_index()
-
 def get_strikes(layer, count):
 
     # Get the x,y points of each polygon
@@ -133,13 +119,8 @@ def get_strikes(layer, count):
 
     # Convert to a ring for intersections
     lring = LinearRing(list(layer.exterior.coords))
-    
-    #plt.plot(x,y)
-
     x3, y3 = center_extract(layer)
 
-    #plt.plot(x3,y3,'-')
-    
     strikelistx1 = []
     strikelisty1 = []
     strikelistx2 = []
@@ -167,7 +148,6 @@ def get_strikes(layer, count):
             cd = LineString([c, d])
             
             cd = cd.intersection(lring)
-            
             '''
             # NOTE this is for plotting to QC values
             if ab.xy[1][0] < ab.xy[1][1]: # check if the line is going up or down
@@ -215,11 +195,20 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     a_label = f"A{plot_number}"
     b_label = f"B{plot_number}"
 
+<<<<<<< HEAD
     ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')].rolling(smoothing_window).mean()
     #ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')]
 
     zero_crossings = np.where(np.diff(np.sign(ZplotDF['Zdiffsmooth'])))[0]
 
+=======
+    ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')].rolling(25).mean()
+    #ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')]
+
+    zero_crossings = np.where(np.diff(np.sign(ZplotDF['Zdiffsmooth'])))[0]
+    #zero_crossings = np.where(np.logical_and(plotDF['Zdiffsmooth']>=-0.2, plotDF['Zdiffsmooth']<=0.2))[0]
+    
+>>>>>>> 7b6e6069777852ad888cbe548fe82146087f4102
     if len(zero_crossings) > 0:
 
         zc_DF = ZplotDF.iloc[zero_crossings]
@@ -238,6 +227,7 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     zc_DF["Cross point"] = cross_point_list
 
     fig, (ax1,ax2) = plt.subplots(1,2,figsize=(10,10))
+<<<<<<< HEAD
     
     
     ax2.plot(plotDF.X1,plotDF.Y1,color = "g")
@@ -270,6 +260,8 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     
     ax2.plot()
 
+=======
+>>>>>>> 7b6e6069777852ad888cbe548fe82146087f4102
     ax1.plot(ZplotDF.Length,ZplotDF['Zdiffsmooth'])
     fig.suptitle(f"Fault #{plot_number}")
     ax1.set_xlabel("Distance Along Fault (m)")
@@ -299,6 +291,31 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
         ax1.invert_xaxis()
 
 
+    ax2.plot(plotDF.X1,plotDF.Y1,color = "r")
+    ax2.plot(plotDF.X2,plotDF.Y2,color = "r")
+    ax2.ticklabel_format(axis='both',style='plain',useOffset=False)
+    try:
+        ax2.plot(plotDF.MidX,plotDF.MidY)
+    except AttributeError:
+        None
+    
+    
+    try:
+        ax2.plot(plotDF.MidX,plotDF.MidY)
+        ax2.text(plotDF.MidX.iloc[0],plotDF.MidY.iloc[0],a_label)
+        ax2.text(plotDF.MidX.iloc[-1],plotDF.MidY.iloc[-1],b_label)
+
+        ax2.plot(zc_DF.MidX,zc_DF.MidY,'x')
+        
+        for i in cross_point_list:
+            ax2.annotate(i, (zc_DF.MidX.iloc[i-1], zc_DF.MidY.iloc[i-1]))
+    
+    except AttributeError:
+        None
+    
+    
+    ax2.set_aspect('equal',adjustable='box')
+    
     if not os.path.isdir(f"{folder_path}/Images/"):
         os.makedirs(f"{folder_path}/Images/")
         os.makedirs(f"{folder_path}/CSV Files/")
