@@ -10,7 +10,7 @@ from shapely import geometry
 from shapely.geometry import LineString
 import os
 from itertools import combinations
-
+import random
 
 # Collection of functions designed to interact with SeisWare SDK
 
@@ -27,7 +27,7 @@ def resample_center(faultDF, sample_interval):
 
     faultDF = faultDF.resample(f'{sample_interval}s',on='Length').mean()
 
-    faultDF.reset_index(inplace =True)
+    faultDF.reset_index(inplace = True)
 
     faultDF['Length'] = faultDF['Length'].apply(lambda x: x.value/10**9)
 
@@ -98,7 +98,7 @@ def center_extract(culture_layer):
     # Function to extract the centerline from seisware polygon object and return two lists. Corresponding x,y points for centerline
 
     # Extract centerline of polygon
-    center = geometry_custom.Centerline(culture_layer,interpolation_distance=50)
+    center = geometry_custom.Centerline(culture_layer,interpolation_distance=5)
 
     centerlist = [list(x.coords) for x in list(center)]
 
@@ -202,7 +202,7 @@ def get_strikes(layer, count):
 
     return faultDF
 
-def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrikelines,folder_path = ".",smoothing_window = 13):
+def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrikelines,folder_path = ".",smoothing_window = 25):
     # Drop values if the distance is greater than the bin size
     ZplotDF = plotDF.drop(plotDF[(plotDF["Interp_distance1"] > bin_size) | (plotDF["Interp_distance2"] > bin_size)].index)
 
@@ -237,12 +237,7 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     ax2.plot(plotDF.X1,plotDF.Y1,color = "g")
     ax2.plot(plotDF.X2,plotDF.Y2,color = "r")
     ax2.ticklabel_format(axis='both',style='plain',useOffset=False)
-    
-    try:
-        ax2.plot(plotDF.MidX,plotDF.MidY)
-    except AttributeError:
-        None
-    
+
     try:
         ax2.plot(plotDF.MidX,plotDF.MidY)
         ax2.text(plotDF.MidX.iloc[0],plotDF.MidY.iloc[0],a_label)
@@ -252,16 +247,25 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
         
         for i in cross_point_list:
             ax2.annotate(i, (zc_DF.MidX.iloc[i-1], zc_DF.MidY.iloc[i-1]))
-    
     except AttributeError:
         None
-    
+
+        # Change x axis to make more intuitive sense by flipping if necessary
     
     ax2.set_aspect('equal',adjustable='box')
     
     # Resample value
     ZplotDF = resample_center(ZplotDF,midpointSampleInterval)
     
+    try:
+        if ZplotDF.MidX.iloc[2] > ZplotDF.MidX.iloc[-1]:
+            print(f"plot # {plot_number} flipped")
+            ax1.invert_xaxis()
+    except IndexError:
+        print("Index error, polygon too small")
+      
+    
+
     ax2.plot()
 
     ax1.plot(ZplotDF.Length,ZplotDF['Zdiffsmooth'])
@@ -269,10 +273,23 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     ax1.set_xlabel("Distance Along Fault (m)")
     ax1.set_ylabel("Fault Difference (m)")
     ax1.plot(zc_DF.Length,zc_DF['Zdiffsmooth'],'x') 
+
+    ax1.fill_between(ZplotDF.Length, ZplotDF['Zdiffsmooth'],  where=(ZplotDF['Zdiffsmooth'] >= 0), color='g', alpha=0.3, interpolate = True)
+    ax1.fill_between(ZplotDF.Length, ZplotDF['Zdiffsmooth'],  where=(ZplotDF['Zdiffsmooth'] <= 0), color='r', alpha=0.3, interpolate = True)
+    
     if displaystrikelines == True:
-        for xc in ZplotDF.Length:
-            ax1.axvline(x=xc,linewidth=0.25)
-            ax2.plot([ZplotDF.X1,ZplotDF.X2],[ZplotDF.Y1,ZplotDF.Y2],linewidth=0.25,color='blue')
+        print(ZplotDF.Length.items())
+        for i,xc in ZplotDF.Length.items():
+            if i % 10 == 0:
+                r1 = random.randint(1,10)/10
+                r2 = random.randint(1,10)/10
+                r3 = random.randint(1,10)/10
+                ax1.axvline(x=xc,linewidth=1.5,color=(r1,r2,r3))
+                ax2.plot([ZplotDF.X1.iat[i],ZplotDF.X2.iat[i]],[ZplotDF.Y1.iat[i],ZplotDF.Y2.iat[i]],linewidth=1.5,color=(r1,r2,r3))
+            else:
+                ax1.axvline(x=xc,linewidth=0.25,color='blue')
+                ax2.plot([ZplotDF.X1.iat[i],ZplotDF.X2.iat[i]],[ZplotDF.Y1.iat[i],ZplotDF.Y2.iat[i]],linewidth=0.35,color='blue')
+    
     ax1.ticklabel_format(axis='both',style='plain',useOffset=False)
     
     for i in cross_point_list:
@@ -287,37 +304,7 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     
     ax1.axhline(y=0,color='r')
 
-    # Change x axis to make more intuitive sense by flipping if necessary
-    if ZplotDF.MidX.iloc[2] > ZplotDF.MidX.iloc[-1]:
-        print(f"plot # {plot_number} flipped")
-        ax1.invert_xaxis()
 
-
-    ax2.plot(plotDF.X1,plotDF.Y1,color = "r")
-    ax2.plot(plotDF.X2,plotDF.Y2,color = "r")
-    ax2.ticklabel_format(axis='both',style='plain',useOffset=False)
-    try:
-        ax2.plot(plotDF.MidX,plotDF.MidY)
-    except AttributeError:
-        None
-    
-    
-    try:
-        ax2.plot(plotDF.MidX,plotDF.MidY)
-        ax2.text(plotDF.MidX.iloc[0],plotDF.MidY.iloc[0],a_label)
-        ax2.text(plotDF.MidX.iloc[-1],plotDF.MidY.iloc[-1],b_label)
-
-        ax2.plot(zc_DF.MidX,zc_DF.MidY,'x')
-        
-        for i in cross_point_list:
-            ax2.annotate(i, (zc_DF.MidX.iloc[i-1], zc_DF.MidY.iloc[i-1]))
-    
-    except AttributeError:
-        None
-    
-    
-    ax2.set_aspect('equal',adjustable='box')
-    
     if not os.path.isdir(f"{folder_path}/Images/"):
         os.makedirs(f"{folder_path}/Images/")
         os.makedirs(f"{folder_path}/CSV Files/")
@@ -331,6 +318,7 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     zc_DF.dropna(subset=['Cross point'],inplace=True)
     fig.savefig(f"{folder_path}/Images/Fault{plot_number}.png",dpi = 200)
     zc_DF.to_csv(f"{folder_path}/CSV Files/zc_DF{plot_number}.csv")
+    ZplotDF.to_csv(f"{folder_path}/CSV Files/ZplotDF{plot_number}.csv")
     print(midpointSampleInterval)
     #plt.show()
 
