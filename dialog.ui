@@ -184,7 +184,7 @@
     <string>Midpoint Sample Interval</string>
    </property>
   </widget>
-  <widget class="QSpinBox" name="midpointSampleInt">
+  <widget class="QSpinBox" name="midPointInterval">
    <property name="geometry">
     <rect>
      <x>140</x>
@@ -213,7 +213,7 @@
     <string>Display Strike Lines</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox">
+  <widget class="QCheckBox" name="displaystrikelines">
    <property name="geometry">
     <rect>
      <x>440</x>

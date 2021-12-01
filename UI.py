@@ -74,7 +74,7 @@ class ui(QDialog):
         grid = self.gridName.currentText()
         cult = self.polygonName.currentText()
         
-        fault_throw_viz(proj,cult,grid,self.folderLocation.text())
+        fault_throw_viz(proj,cult,grid,self.folderLocation.text(),self.displaystrikelines.isChecked(),self.midPointInterval.value())
 
         print(f"File output to {self.folderLocation.text()}")
         #define what happens on button click

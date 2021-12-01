@@ -15,75 +15,6 @@ import os
 pd.set_option('mode.chained_assignment', None)
 
 
-def zerocross1d(x, y, getIndices=False):
-  """
-    Find the zero crossing points in 1d data.
-    
-    Find the zero crossing events in a discrete data set.
-    Linear interpolation is used to determine the actual
-    locations of the zero crossing between two data points
-    showing a change in sign. Data point which are zero
-    are counted in as zero crossings if a sign change occurs
-    across them. Note that the first and last data point will
-    not be considered whether or not they are zero. 
-    
-    Parameters
-    ----------
-    x, y : arrays
-        Ordinate and abscissa data values.
-    getIndices : boolean, optional
-        If True, also the indicies of the points preceding
-        the zero crossing event will be returned. Defeualt is
-        False.
-    
-    Returns
-    -------
-    xvals : array
-        The locations of the zero crossing events determined
-        by linear interpolation on the data.
-    indices : array, optional
-        The indices of the points preceding the zero crossing
-        events. Only returned if `getIndices` is set True.
-  """
-  
-  # Check sorting of x-values
-  #if np.any((x[1:] - x[0:-1]) <= 0.0):
-  #  raise(PE.PyAValError("The x-values must be sorted in ascending order!", \
-  #                       where="zerocross1d", \
-  #                       solution="Sort the data prior to calling zerocross1d."))
-  
-  # Indices of points *before* zero-crossing
-  indi = np.where(y[1:]*y[0:-1] < 0.0)[0]
-  
-  # Find the zero crossing by linear interpolation
-  dx = x[indi+1] - x[indi]
-  dy = y[indi+1] - y[indi]
-  zc = -y[indi] * (dx/dy) + x[indi]
-  
-  # What about the points, which are actually zero
-  zi = np.where(y == 0.0)[0]
-  # Do nothing about the first and last point should they
-  # be zero
-  zi = zi[np.where((zi > 0) & (zi < x.size-1))]
-  # Select those point, where zero is crossed (sign change
-  # across the point)
-  zi = zi[np.where(y[zi-1]*y[zi+1] < 0.0)]
-  
-  # Concatenate indices
-  zzindi = np.concatenate((indi, zi)) 
-  # Concatenate zc and locations corresponding to zi
-  zz = np.concatenate((zc, x[zi]))
-  
-  # Sort by x-value
-  sind = np.argsort(zz)
-  zz, zzindi = zz[sind], zzindi[sind]
-  
-  if not getIndices:
-    return zz
-  else:
-    return zz, zzindi
-  
-
 def getLayer(login_instance,name):
     #Here we get a single culture layer based on a login instance and a given layer name
     #We will also populate the layer because why not
@@ -277,25 +208,18 @@ def get_strikes(layer, count):
 
     return faultDF
 
-def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window = 13):
+def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrikelines,folder_path = ".",smoothing_window = 13):
     # Drop values if the distance is greater than the bin size
     ZplotDF = plotDF.drop(plotDF[(plotDF["Interp_distance1"] > bin_size) | (plotDF["Interp_distance2"] > bin_size)].index)
 
     a_label = f"A{plot_number}"
     b_label = f"B{plot_number}"
 
-    ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')].rolling(15).mean()
+    ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')].rolling(smoothing_window).mean()
     #ZplotDF['Zdiffsmooth'] = ZplotDF.loc[:,('Zdiff')]
 
     zero_crossings = np.where(np.diff(np.sign(ZplotDF['Zdiffsmooth'])))[0]
 
-    ZplotDF1 = ZplotDF.loc[ZplotDF['Object'] == 1]
-
-    zero_crossings1d = zerocross1d(list(ZplotDF1.Length),list(ZplotDF1.Zdiff))
-
-    print("ZC 1d", zero_crossings1d)
-    #zero_crossings = np.where(np.logical_and(plotDF['Zdiffsmooth']>=-0.2, plotDF['Zdiffsmooth']<=0.2))[0]
-    
     if len(zero_crossings) > 0:
 
         zc_DF = ZplotDF.iloc[zero_crossings]
@@ -319,11 +243,11 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     ax2.plot(plotDF.X1,plotDF.Y1,color = "g")
     ax2.plot(plotDF.X2,plotDF.Y2,color = "r")
     ax2.ticklabel_format(axis='both',style='plain',useOffset=False)
+    
     try:
         ax2.plot(plotDF.MidX,plotDF.MidY)
     except AttributeError:
         None
-    
     
     try:
         ax2.plot(plotDF.MidX,plotDF.MidY)
@@ -341,9 +265,8 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     
     ax2.set_aspect('equal',adjustable='box')
     
-
     # Resample value
-    ZplotDF = resample_center(ZplotDF,250)
+    ZplotDF = resample_center(ZplotDF,midpointSampleInterval)
     
     ax2.plot()
 
@@ -351,8 +274,11 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     fig.suptitle(f"Fault #{plot_number}")
     ax1.set_xlabel("Distance Along Fault (m)")
     ax1.set_ylabel("Fault Difference (m)")
-    ax1.plot(zc_DF.Length,zc_DF['Zdiffsmooth'],'x')
-    
+    ax1.plot(zc_DF.Length,zc_DF['Zdiffsmooth'],'x') 
+    if displaystrikelines == True:
+        for xc in ZplotDF.Length:
+            ax1.axvline(x=xc,linewidth=0.25)
+            ax2.plot([ZplotDF.X1,ZplotDF.X2],[ZplotDF.Y1,ZplotDF.Y2],linewidth=0.25,color='blue')
     ax1.ticklabel_format(axis='both',style='plain',useOffset=False)
     
     for i in cross_point_list:
@@ -386,7 +312,7 @@ def build_plots(plotDF,bin_size,plot_number,folder_path = ".",smoothing_window =
     zc_DF.dropna(subset=['Cross point'],inplace=True)
     fig.savefig(f"{folder_path}/Images/Fault{plot_number}.png",dpi = 200)
     zc_DF.to_csv(f"{folder_path}/CSV Files/zc_DF{plot_number}.csv")
-
+    print(midpointSampleInterval)
     #plt.show()
 
 

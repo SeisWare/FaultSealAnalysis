@@ -5,7 +5,7 @@ import numpy as np
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 
-def fault_throw_viz(proj,cult_name,grid_name,folder_name):
+def fault_throw_viz(proj,cult_name,grid_name,folder_name,displaystrikelines,midpoint_sample_interval):
     # Replace null grid values with NaN
     
     cult = get_polygon.getLayer(proj,cult_name)
@@ -59,7 +59,7 @@ def fault_throw_viz(proj,cult_name,grid_name,folder_name):
     for i in faultDF.Object.unique():
         plotDF = faultDF.loc[faultDF['Object'] == i]
 
-        get_polygon.build_plots(plotDF,bin_size,i,folder_name)
+        get_polygon.build_plots(plotDF,bin_size,i,midpoint_sample_interval,displaystrikelines,folder_name)
 
         r1 = random()
         r2 = random()
