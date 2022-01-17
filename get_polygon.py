@@ -271,7 +271,7 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     fig.suptitle(f"Fault #{plot_number}")
     ax1.set_xlabel("Distance Along Fault (m)")
     ax1.set_ylabel("Fault Difference (m)")
-    ax1.plot(zc_DF.Length,0,'x') 
+    ax1.plot(zc_DF.Length,np.zeros_like(zc_DF.Length),'x') 
 
     ax1.fill_between(ZplotDF.Length, ZplotDF['Zdiffsmooth'],  where=(ZplotDF['Zdiffsmooth'] >= 0), color='g', alpha=0.3, interpolate = True)
     ax1.fill_between(ZplotDF.Length, ZplotDF['Zdiffsmooth'],  where=(ZplotDF['Zdiffsmooth'] <= 0), color='r', alpha=0.3, interpolate = True)
