@@ -226,6 +226,7 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     zc_DF = zc_DF[zc_DF['Zdiffsmooth'].notna()]
 
     cross_point_list = []
+    
     for i, txt in enumerate(zc_DF.Length.items()):
         cross_point_list.append(i+1)
 
@@ -250,7 +251,7 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     except AttributeError:
         None
 
-        # Change x axis to make more intuitive sense by flipping if necessary
+    # Change x axis to make more intuitive sense by flipping if necessary
     
     ax2.set_aspect('equal',adjustable='box')
     
@@ -264,15 +265,13 @@ def build_plots(plotDF,bin_size,plot_number,midpointSampleInterval,displaystrike
     except IndexError:
         print("Index error, polygon too small")
       
-    
-
     ax2.plot()
 
     ax1.plot(ZplotDF.Length,ZplotDF['Zdiffsmooth'])
     fig.suptitle(f"Fault #{plot_number}")
     ax1.set_xlabel("Distance Along Fault (m)")
     ax1.set_ylabel("Fault Difference (m)")
-    ax1.plot(zc_DF.Length,zc_DF['Zdiffsmooth'],'x') 
+    ax1.plot(zc_DF.Length,0,'x') 
 
     ax1.fill_between(ZplotDF.Length, ZplotDF['Zdiffsmooth'],  where=(ZplotDF['Zdiffsmooth'] >= 0), color='g', alpha=0.3, interpolate = True)
     ax1.fill_between(ZplotDF.Length, ZplotDF['Zdiffsmooth'],  where=(ZplotDF['Zdiffsmooth'] <= 0), color='r', alpha=0.3, interpolate = True)
