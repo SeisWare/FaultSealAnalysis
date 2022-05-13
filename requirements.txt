@@ -1,0 +1,64 @@
+astroid==2.4.2
+attrs @ file:///tmp/build/80754af9/attrs_1620827162558/work
+Bottleneck==1.3.2
+certifi==2021.5.30
+charset-normalizer==2.0.10
+click @ file:///home/linux1/recipes/ci/click_1610990599742/work
+click-plugins==1.1.1
+cligj==0.7.2
+colorama==0.4.3
+cycler==0.10.0
+docopt==0.6.2
+Fiona==1.8.13.post1
+fonttools==4.25.0
+GDAL==3.0.2
+geopandas @ file:///tmp/build/80754af9/geopandas_1627401391374/work
+idna==3.3
+imageio==2.13.5
+isort==4.3.21
+joblib @ file:///tmp/build/80754af9/joblib_1613502643832/work
+kiwisolver @ file:///C:/ci/kiwisolver_1612282618948/work
+lazy-object-proxy==1.4.3
+mapclassify @ file:///tmp/build/80754af9/mapclassify_1627369494639/work
+matplotlib @ file:///C:/ci/matplotlib-suite_1628011511716/work
+mccabe==0.6.1
+mkl-fft==1.3.0
+mkl-random @ file:///C:/ci/mkl_random_1626186163140/work
+mkl-service==2.4.0
+munch==2.5.0
+munkres==1.1.4
+networkx @ file:///tmp/build/80754af9/networkx_1627459939258/work
+numexpr @ file:///C:/ci/numexpr_1618856761305/work
+numpy @ file:///C:/ci/numpy_and_numpy_base_1626271861146/work
+olefile==0.46
+packaging==21.3
+pandas @ file:///C:/ci/pandas_1627570311072/work
+Pillow==8.4.0
+pipreqs==0.4.11
+pylint==2.5.3
+pyparsing @ file:///home/linux1/recipes/ci/pyparsing_1610983426697/work
+pyproj @ file:///C:/ci/pyproj_1614278152133/work
+PyQt5==5.15.4
+PyQt5-Qt5==5.15.2
+PyQt5-sip==12.9.0
+PySide6==6.2.2.1
+python-dateutil @ file:///tmp/build/80754af9/python-dateutil_1626374649649/work
+pytz @ file:///tmp/build/80754af9/pytz_1612215392582/work
+PyWavelets==1.2.0
+requests==2.27.1
+Rtree @ file:///C:/ci/rtree_1618421019532/work
+scikit-image==0.19.1
+scikit-learn @ file:///C:/ci/scikit-learn_1622739441385/work
+scipy @ file:///C:/ci/scipy_1618856134946/work
+Shapely==1.7.1
+shiboken6==6.2.2.1
+six @ file:///tmp/build/80754af9/six_1623709665295/work
+threadpoolctl @ file:///tmp/build/80754af9/threadpoolctl_1626115094421/work
+tifffile==2021.11.2
+toml==0.10.1
+tornado @ file:///C:/ci/tornado_1606935947090/work
+typed-ast==1.4.1
+urllib3==1.26.8
+wincertstore==0.2
+wrapt==1.12.1
+yarg==0.1.9
