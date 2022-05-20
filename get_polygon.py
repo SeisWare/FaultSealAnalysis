@@ -149,7 +149,7 @@ def get_strikes(layer, count):
 
         if (k+1 < len(list(zip(x3,y3))) and k - 1 >= 0):
             
-            cd_length = 550
+            cd_length = 2500
 
             ab = LineString(([(list(zip(x3,y3))[k-1][0],list(zip(x3,y3))[k-1][1]),(v[0],v[1])]))
 
