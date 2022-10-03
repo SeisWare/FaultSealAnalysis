@@ -11,3 +11,5 @@ The required libraries are:
 - PyQt5 (used only for UI)
 
 You will also need the SeisWare SDK installed and available for your python environment.  
+
+Run from UI.py to get the interface for selection the project, grid and polygons.
